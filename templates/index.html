@@ -1,46 +1,732 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
+<html lang="tr">
+<head>
     <meta charset="UTF-8">
-    <title>3D Website Demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberDesign - Ultra-Futuristik 3D Web Ajansı</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  </head>
-  <body>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        #canvas3d {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0, 255, 255, 0.3);
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            background: linear-gradient(to right, #00ffff, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: #00ffff;
+            text-decoration: none;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #ec4899;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .hero-content h1 {
+            font-size: 8rem;
+            font-weight: bold;
+            background: linear-gradient(to right, #00ffff, #a855f7, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: pulse 2s ease-in-out infinite;
+            margin-bottom: 1rem;
+        }
+
+        .hero-content h2 {
+            font-size: 3rem;
+            color: #00ffff;
+            font-weight: 300;
+            margin-bottom: 2rem;
+        }
+
+        .hero-content p {
+            font-size: 1.3rem;
+            color: #9ca3af;
+            max-width: 800px;
+            margin: 0 auto 3rem;
+        }
+
+        .cta-button {
+            padding: 1rem 3rem;
+            background: linear-gradient(to right, #00ffff, #a855f7);
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .cta-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+        }
+
+        /* Sections */
+        section {
+            min-height: 100vh;
+            padding: 6rem 2rem;
+            position: relative;
+        }
+
+        .section-title {
+            font-size: 4rem;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 4rem;
+            background: linear-gradient(to right, #ec4899, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Services Grid */
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .service-card {
+            padding: 3rem;
+            border-radius: 20px;
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(168, 85, 247, 0.1));
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s;
+        }
+
+        .service-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.3);
+        }
+
+        .service-icon {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 1.5rem;
+            color: #00ffff;
+        }
+
+        .service-card h3 {
+            font-size: 1.8rem;
+            color: #00ffff;
+            margin-bottom: 1rem;
+        }
+
+        .service-card p {
+            color: #9ca3af;
+            line-height: 1.6;
+        }
+
+        /* Templates Grid */
+        .templates-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+
+        .template-card {
+            position: relative;
+            border-radius: 20px;
+            overflow: hidden;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(168, 85, 247, 0.2));
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            transition: all 0.3s;
+        }
+
+        .template-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 60px rgba(168, 85, 247, 0.5);
+        }
+
+        .template-content {
+            padding: 2.5rem;
+        }
+
+        .template-icon {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 1.5rem;
+            color: #00ffff;
+        }
+
+        .template-card h3 {
+            font-size: 1.8rem;
+            color: #00ffff;
+            margin-bottom: 1rem;
+        }
+
+        .template-card p {
+            color: #9ca3af;
+            margin-bottom: 2rem;
+        }
+
+        .demo-button {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .demo-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Pricing */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .pricing-card {
+            padding: 3rem;
+            border-radius: 20px;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(168, 85, 247, 0.1));
+            backdrop-filter: blur(10px);
+            transition: all 0.3s;
+        }
+
+        .pricing-card.popular {
+            transform: scale(1.05);
+            border-color: #ec4899;
+            box-shadow: 0 0 60px rgba(236, 72, 153, 0.3);
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(236, 72, 153, 0.2));
+        }
+
+        .pricing-badge {
+            text-align: center;
+            color: #ec4899;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .pricing-card h3 {
+            font-size: 2rem;
+            text-align: center;
+            color: #00ffff;
+            margin-bottom: 1.5rem;
+        }
+
+        .price {
+            font-size: 3rem;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .features {
+            list-style: none;
+            margin-bottom: 2rem;
+        }
+
+        .features li {
+            padding: 0.8rem 0;
+            color: #d1d5db;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .features li:before {
+            content: "✦";
+            color: #00ffff;
+            font-size: 1.2rem;
+        }
+
+        /* Contact Form */
+        .contact-form {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 3rem;
+            border-radius: 20px;
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(168, 85, 247, 0.1));
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .form-group {
+            margin-bottom: 2rem;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 1.2rem;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #00ffff;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 150px;
+        }
+
+        .submit-button {
+            width: 100%;
+            padding: 1.2rem;
+            background: linear-gradient(to right, #00ffff, #a855f7);
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .submit-button:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 40px rgba(0, 255, 255, 0.5);
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid rgba(0, 255, 255, 0.3);
+            padding: 2rem;
+            text-align: center;
+            color: #6b7280;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .hero-content h1 {
+                font-size: 4rem;
+            }
+            
+            .hero-content h2 {
+                font-size: 1.8rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .section-title {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas3d"></canvas>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <div class="logo">CYBER<span style="color: #ec4899;">DESIGN</span></div>
+            <ul class="nav-links">
+                <li><a href="#home">HOME</a></li>
+                <li><a href="#services">SERVICES</a></li>
+                <li><a href="#templates">TEMPLATES</a></li>
+                <li><a href="#pricing">PRICING</a></li>
+                <li><a href="#contact">CONTACT</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <h1>GELECEK</h1>
+            <h2>WEB TASARIMININ GELECEĞE HOŞGELDIN</h2>
+            <p>Ultra-futuristik 3D web deneyimleri yaratan ajans. Holografik, immersive, unutulmaz.</p>
+            <button class="cta-button" onclick="scrollToSection('templates')">Şablonları Keşfet</button>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services">
+        <div class="container">
+            <h2 class="section-title">HİZMETLERİMİZ</h2>
+            <div class="services-grid">
+                <div class="service-card">
+                    <svg class="service-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                    </svg>
+                    <h3>3D Web Tasarım</h3>
+                    <p>Three.js ile immersive, interaktif deneyimler. Kullanıcılarınızı büyüleyen 3D dünyalar yaratıyoruz.</p>
+                </div>
+                <div class="service-card">
+                    <svg class="service-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
+                    </svg>
+                    <h3>UI/UX Design</h3>
+                    <p>Gelecekçi, kullanıcı odaklı arayüz tasarımları. Her piksel, her animasyon özenle düşünülmüş.</p>
+                </div>
+                <div class="service-card">
+                    <svg class="service-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+                    </svg>
+                    <h3>Animasyon</h3>
+                    <p>Smooth ve etkileyici animasyonlar. Sitenizi canlandıran, unutulmaz görsel hikayeler.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Templates Section -->
+    <section id="templates">
+        <div class="container">
+            <h2 class="section-title">CANLI ŞABLONLAR</h2>
+            <p style="text-align: center; color: #9ca3af; font-size: 1.3rem; margin-bottom: 4rem;">
+                Her biri gerçekten çalışan, interaktif 3D web siteleri
+            </p>
+            <div class="templates-grid">
+                <div class="template-card">
+                    <div class="template-content">
+                        <svg class="template-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                        </svg>
+                        <h3>3D Ürün Showcase</h3>
+                        <p>360° dönen ürünler, interaktif sepet animasyonları, zoom özelliği</p>
+                        <button class="demo-button" style="background: linear-gradient(to right, #06b6d4, #3b82f6);" onclick="openDemo('product')">
+                            CANLI DEMO
+                        </button>
+                    </div>
+                </div>
+
+                <div class="template-card">
+                    <div class="template-content">
+                        <svg class="template-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
+                        </svg>
+                        <h3>Immersive Portfolio</h3>
+                        <p>3D galeri, hover efektleri, proje detay modalleri</p>
+                        <button class="demo-button" style="background: linear-gradient(to right, #a855f7, #ec4899);" onclick="openDemo('portfolio')">
+                            CANLI DEMO
+                        </button>
+                    </div>
+                </div>
+
+                <div class="template-card">
+                    <div class="template-content">
+                        <svg class="template-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                        </svg>
+                        <h3>Sanal Showroom</h3>
+                        <p>First-person navigasyon, 3D ortamda gezinme, interaktif objeler</p>
+                        <button class="demo-button" style="background: linear-gradient(to right, #10b981, #14b8a6);" onclick="openDemo('showroom')">
+                            CANLI DEMO
+                        </button>
+                    </div>
+                </div>
+
+                <div class="template-card">
+                    <div class="template-content">
+                        <svg class="template-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+                        </svg>
+                        <h3>Restoran 3D Menü</h3>
+                        <p>3D yemek modelleri, interaktif menü sistemi, sipariş formu</p>
+                        <button class="demo-button" style="background: linear-gradient(to right, #f97316, #ef4444);" onclick="openDemo('restaurant')">
+                            CANLI DEMO
+                        </button>
+                    </div>
+                </div>
+
+                <div class="template-card">
+                    <div class="template-content">
+                        <svg class="template-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                        </svg>
+                        <h3>Kurumsal Dashboard</h3>
+                        <p>3D data görselleştirme, animasyonlu grafikler, real-time güncellemeler</p>
+                        <button class="demo-button" style="background: linear-gradient(to right, #6366f1, #8b5cf6);" onclick="openDemo('dashboard')">
+                            CANLI DEMO
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing">
+        <div class="container">
+            <h2 class="section-title">FİYATLANDIRMA</h2>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <h3>Başlangıç</h3>
+                    <div class="price">₺15.000</div>
+                    <ul class="features">
+                        <li>1 Şablon</li>
+                        <li>3D Animasyonlar</li>
+                        <li>Mobil Uyumlu</li>
+                        <li>1 Ay Destek</li>
+                    </ul>
+                    <button class="cta-button">Başla</button>
+                </div>
+
+                <div class="pricing-card popular">
+                    <div class="pricing-badge">POPÜLER</div>
+                    <h3>Profesyonel</h3>
+                    <div class="price">₺35.000</div>
+                    <ul class="features">
+                        <li>3 Şablon</li>
+                        <li>Özel 3D Modeller</li>
+                        <li>SEO Optimizasyon</li>
+                        <li>6 Ay Destek</li>
+                    </ul>
+                    <button class="cta-button">Başla</button>
+                </div>
+
+                <div class="pricing-card">
+                    <h3>Enterprise</h3>
+                    <div class="price">₺75.000</div>
+                    <ul class="features">
+                        <li>Sınırsız Şablon</li>
+                        <li>Full Custom</li>
+                        <li>Hosting Dahil</li>
+                        <li>1 Yıl Destek</li>
+                    </ul>
+                    <button class="cta-button">Başla</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact">
+        <div class="container">
+            <h2 class="section-title">İLETİŞİM</h2>
+            <div class="contact-form">
+                <div class="form-group">
+                    <input type="text" id="name" placeholder="Adınız" required>
+                </div>
+                <div class="form-group">
+                    <input type="email" id="email" placeholder="E-posta" required>
+                </div>
+                <div class="form-group">
+                    <textarea id="message" placeholder="Mesajınız" required></textarea>
+                </div>
+                <button class="submit-button" onclick="submitForm()">
+                    <span style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                        </svg>
+                        Gönder
+                    </span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>© 2025 CyberDesign. Tüm hakları saklıdır.</p>
+        <p style="margin-top: 0.5rem; font-size: 0.9rem; color: rgba(0, 255, 255, 0.5);">Powered by Three.js</p>
+    </footer>
+
     <script>
-      // Create scene
-      const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(
-        75, window.innerWidth / window.innerHeight, 0.1, 1000
-      );
-      const renderer = new THREE.WebGLRenderer({antialias: true});
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      document.body.appendChild(renderer.domElement);
+        // Three.js Scene Setup
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x000000, 0.05);
 
-      // Add cube
-      const geometry = new THREE.BoxGeometry();
-      const material = new THREE.MeshNormalMaterial();
-      const cube = new THREE.Mesh(geometry, material);
-      scene.add(cube);
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 5;
 
-      camera.position.z = 5;
-
-      // Animation loop
-      function animate() {
-        requestAnimationFrame(animate);
-        cube.rotation.x += 0.01;
-        cube.rotation.y += 0.01;
-        renderer.render(scene, camera);
-      }
-      animate();
-
-      // Resize handler
-      window.addEventListener("resize", () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
+        const renderer = new THREE.WebGLRenderer({ 
+            canvas: document.getElementById('canvas3d'), 
+            antialias: true, 
+            alpha: true 
+        });
         renderer.setSize(window.innerWidth, window.innerHeight);
-      });
-    </script>
-  </body>
-</html>
+        renderer.setPixelRatio(window.devicePixelRatio);
 
+        // Particles
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlesCount = 5000;
+        const posArray = new Float32Array(particlesCount * 3);
+
+        for (let i = 0; i < particlesCount * 3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 100;
+        }
+
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+
+        const particlesMaterial = new THREE.PointsMaterial({
+            size: 0.05,
+            color: 0x00ffff,
+            transparent: true,
+            opacity: 0.8,
+            blending: THREE.AdditiveBlending
+        });
+
+        const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particlesMesh);
+
+        // Torus
+        const torusGeometry = new THREE.TorusGeometry(2, 0.5, 16, 100);
+        const torusMaterial = new THREE.MeshBasicMaterial({
+            color: 0xff00ff,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.3
+        });
+        const torus = new THREE.Mesh(torusGeometry, torusMaterial);
+        scene.add(torus);
+
+        // Icosahedron
+        const icoGeometry = new THREE.IcosahedronGeometry(1.5, 0);
+        const icoMaterial = new THREE.MeshBasicMaterial({
+            color: 0x00ffff,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.4
+        });
+        const icosahedron = new THREE.Mesh(icoGeometry, icoMaterial);
+        icosahedron.position.set(-3, 2, -5);
+        scene.add(icosahedron);
+
+        let time = 0;
+
+        function animate() {
+            requestAnimationFrame(animate);
+            time += 0.001;
+
+            particlesMesh.rotation.y = time * 0.5;
+            particlesMesh.rotation.x = time * 0.3;
+
+            torus.rotation.x = time * 2;
+            torus.rotation.y = time * 3;
+
+            icosahedron.rotation.x = time * 1.5;
+            icosahedron.rotation.y = time * 2;
+
+            camera.position.x = Math.sin(time * 0.5) * 0.5;
+            camera.position.y = Math.cos(time * 0.3) * 0.5;
+
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Smooth Scroll
+        function scrollToSection(id) {
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Form Submit
+        function submitForm() {
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const message = document.getElementById('message').value;
+
+            if (name && email && message) {
+                alert('Form gönderildi! Flask backend ile entegre edilecek.');
+                document.getElementById('name').value = '';
+                document.getElementById('email').value = '';
+                document.getElementById('message').value = '';
+            } else {
+                alert('Lütfen tüm alanları doldurun.');
+            }
+        }
+
+        // Open Template Demo
+        function openDemo(template) {
+            window.location.href = `/template/${template}`;
+        }

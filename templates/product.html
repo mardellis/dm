@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Ürün Showcase - CyberDesign</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .cart-icon {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #ff6b6b;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            opacity: 0.9;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .product-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .product-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .product-canvas {
+            width: 100%;
+            height: 300px;
+            border-radius: 15px;
+            margin-bottom: 1.5rem;
+        }
+
+        .product-info h3 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .product-info p {
+            opacity: 0.8;
+            margin-bottom: 1rem;
+        }
+
+        .product-price {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ffd700;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-add-cart {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(to right, #667eea, #764ba2);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-add-cart:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 3rem;
+            border-radius: 20px;
+            max-width: 800px;
+            width: 90%;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 2rem;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: #fff;
+        }
+
+        .modal-canvas {
+            width: 100%;
+            height: 400px;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+        }
+
+        .controls {
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .controls button {
+            margin: 0 0.5rem;
+            padding: 0.8rem 1.5rem;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .controls button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        @keyframes addToCart {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .cart-animation {
+            animation: addToCart 0.5s ease;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">🛍️ 3D STORE</div>
+        <div class="cart-icon" onclick="alert('Sepet özelliği yakında!')">
+            <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            </svg>
+            <span class="cart-count" id="cartCount">0</span>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="hero">
+            <h1>🚀 Premium Ürünler</h1>
+            <p>360° dönen 3D ürün görsellemeleri ile alışverişin geleceğini yaşayın</p>
+        </div>
+
+        <div class="products-grid">
+            <div class="product-card" onclick="openProductModal('product1')">
+                <canvas class="product-canvas" id="canvas1"></canvas>
+                <div class="product-info">
+                    <h3>Wireless Kulaklık</h3>
+                    <p>Premium ses kalitesi, noise cancelling</p>
+                    <div class="product-price">₺2.499</div>
+                    <button class="btn-add-cart" onclick="addToCart(event, 'Wireless Kulaklık', 2499)">
+                        Sepete Ekle
+                    </button>
+                </div>
+            </div>
+
+            <div class="product-card" onclick="openProductModal('product2')">
+                <canvas class="product-canvas" id="canvas2"></canvas>
+                <div class="product-info">
+                    <h3>Smart Watch</h3>
+                    <p>Fitness tracker, su geçirmez, GPS</p>
+                    <div class="product-price">₺3.999</div>
+                    <button class="btn-add-cart" onclick="addToCart(event, 'Smart Watch', 3999)">
+                        Sepete Ekle
+                    </button>
+                </div>
+            </div>
+
+            <div class="product-card" onclick="openProductModal('product3')">
+                <canvas class="product-canvas" id="canvas3"></canvas>
+                <div class="product-info">
+                    <h3>VR Gözlük</h3>
+                    <p>Sanal gerçeklik, 4K çözünürlük</p>
+                    <div class="product-price">₺5.499</div>
+                    <button class="btn-add-cart" onclick="addToCart(event, 'VR Gözlük', 5499)">
+                        Sepete Ekle
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="productModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+            <h2 id="modalTitle" style="text-align: center; margin-bottom: 2rem;">Ürün Detayı</h2>
+            <canvas class="modal-canvas" id="modalCanvas"></canvas>
+            <div class="controls">
+                <button onclick="rotateLeft()">⬅️ Sola Döndür</button>
+                <button onclick="rotateRight()">➡️ Sağa Döndür</button>
+                <button onclick="zoomIn()">🔍 Yakınlaştır</button>
+                <button onclick="zoomOut()">🔍 Uzaklaştır</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let cartCount = 0;
+        let modalScene, modalCamera, modalRenderer, modalObject;
+
+        // Initialize 3D scenes for product cards
+        function initProductCanvas(canvasId, color) {
+            const canvas = document.getElementById(canvasId);
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, canvas.width / canvas.height, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+            renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+
+            const geometry = new THREE.TorusKnotGeometry(1, 0.3, 100, 16);
+            const material = new THREE.MeshStandardMaterial({ 
+                color: color,
+                metalness: 0.7,
+                roughness: 0.2
+            });
+            const object = new THREE.Mesh(geometry, material);
+            scene.add(object);
+
+            const light = new THREE.PointLight(0xffffff, 1, 100);
+            light.position.set(5, 5, 5);
+            scene.add(light);
+
+            const ambientLight = new THREE.AmbientLight(0x404040);
+            scene.add(ambientLight);
+
+            camera.position.z = 5;
+
+            function animate() {
+                requestAnimationFrame(animate);
+                object.rotation.x += 0.01;
+                object.rotation.y += 0.01;
+                renderer.render(scene, camera);
+            }
+            animate();
+        }
+
+        // Initialize all product canvases
+        initProductCanvas('canvas1', 0x667eea);
+        initProductCanvas('canvas2', 0xff6b6b);
+        initProductCanvas('canvas3', 0x4ecdc4);
+
+        // Modal functions
+        function openProductModal(productId) {
+            event.stopPropagation();
+            const modal = document.getElementById('productModal');
+            modal.classList.add('active');
+
+            if (!modalRenderer) {
+                const canvas = document.getElementById('modalCanvas');
+                modalScene = new THREE.Scene();
+                modalCamera = new THREE.PerspectiveCamera(75, canvas.width / canvas.height, 0.1, 1000);
+                modalRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+                modalRenderer.setSize(canvas.clientWidth, canvas.clientHeight);
+
+                const geometry = new THREE.DodecahedronGeometry(2, 0);
+                const material = new THREE.MeshStandardMaterial({ 
+                    color: 0xffd700,
+                    metalness: 0.8,
+                    roughness: 0.1
+                });
+                modalObject = new THREE.Mesh(geometry, material);
+                modalScene.add(modalObject);
+
+                const light = new THREE.PointLight(0xffffff, 1, 100);
+                light.position.set(10, 10, 10);
+                modalScene.add(light);
+
+                const ambientLight = new THREE.AmbientLight(0x606060);
+                modalScene.add(ambientLight);
+
+                modalCamera.position.z = 5;
+
+                function animate() {
+                    requestAnimationFrame(animate);
+                    modalObject.rotation.y += 0.005;
+                    modalRenderer.render(modalScene, modalCamera);
+                }
+                animate();
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('productModal').classList.remove('active');
+        }
+
+        function rotateLeft() {
+            if (modalObject) modalObject.rotation.y -= 0.3;
+        }
+
+        function rotateRight() {
+            if (modalObject) modalObject.rotation.y += 0.3;
+        }
+
+        function zoomIn() {
+            if (modalCamera) modalCamera.position.z -= 0.5;
+        }
+
+        function zoomOut() {
+            if (modalCamera) modalCamera.position.z += 0.5;
+        }
+
+        function addToCart(event, productName, price) {
+            event.stopPropagation();
+            cartCount++;
+            document.getElementById('cartCount').textContent = cartCount;
+            
+            const btn = event.target;
+            btn.classList.add('cart-animation');
+            btn.textContent = '✓ Eklendi!';
+            
+            setTimeout(() => {
+                btn.classList.remove('cart-animation');
+                btn.textContent = 'Sepete Ekle';
+            }, 1500);
+
+            alert(`${productName} sepete eklendi! (₺${price.toLocaleString('tr-TR')})`);
+        }
+
+        // Close modal on outside click
+        document.getElementById('productModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+    </script>
+</body>
+</html>

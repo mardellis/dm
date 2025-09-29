@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restoran 3D Menü - CyberDesign</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #2c1810 0%, #1a0f0a 100%);
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+
+        header {
+            text-align: center;
+            padding: 3rem 2rem;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+        }
+
+        header h1 {
+            font-size: 4rem;
+            color: #ffa500;
+            text-shadow: 0 0 20px rgba(255, 165, 0, 0.5);
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            font-size: 1.3rem;
+            color: #ccc;
+            font-style: italic;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .menu-categories {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 3rem;
+            flex-wrap: wrap;
+        }
+
+        .category-btn {
+            padding: 1rem 2rem;
+            background: rgba(255, 165, 0, 0.2);
+            border: 2px solid #ffa500;
+            border-radius: 50px;
+            color: #ffa500;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .category-btn:hover,
+        .category-btn.active {
+            background: #ffa500;
+            color: #000;
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255, 165, 0, 0.5);
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+
+        .menu-item {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 165, 0, 0.3);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .menu-item:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(255, 165, 0, 0.3);
+            border-color: #ffa500;
+        }
+
+        .item-canvas {
+            width: 100%;
+            height: 250px;
+            border-radius: 15px;
+            margin-bottom: 1.5rem;
+        }
+
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .item-name {
+            font-size: 1.8rem;
+            color: #ffa500;
+        }
+
+        .item-price {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .item-desc {
+            color: #ccc;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .item-tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .tag {
+            padding: 0.4rem 0.8rem;
+            background: rgba(255, 165, 0, 0.2);
+            border: 1px solid #ffa500;
+            border-radius: 15px;
+            font-size: 0.8rem;
+        }
+
+        .order-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(to right, #ff6b00, #ffa500);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .order-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(255, 165, 0, 0.5);
+        }
+
+        .cart-float {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: linear-gradient(135deg, #ff6b00, #ffa500);
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(255, 165, 0, 0.5);
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .cart-float:hover {
+            transform: scale(1.1);
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ff0000;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #2c1810, #1a0f0a);
+            padding: 3rem;
+            border-radius: 20px;
+            max-width: 900px;
+            width: 100%;
+            border: 2px solid #ffa500;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 2.5rem;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: #ffa500;
+        }
+
+        .modal-canvas {
+            width: 100%;
+            height: 400px;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+        }
+
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .qty-btn {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 165, 0, 0.2);
+            border: 2px solid #ffa500;
+            border-radius: 50%;
+            color: #ffa500;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .qty-btn:hover {
+            background: #ffa500;
+            color: #000;
+        }
+
+        .qty-display {
+            font-size: 2rem;
+            font-weight: bold;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            header h1 { font-size: 2.5rem; }
+            .menu-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="bgCanvas"></canvas>
+
+    <header>
+        <h1>🍽️ Gourmet Restaurant</h1>
+        <p>3D Menü Deneyimi</p>
+    </header>
+
+    <div class="container">
+        <div class="menu-categories">
+            <button class="category-btn active" onclick="filterCategory('all')">Tümü</button>
+            <button class="category-btn" onclick="filterCategory('appetizer')">Başlangıçlar</button>
+            <button class="category-btn" onclick="filterCategory('main')">Ana Yemekler</button>
+            <button class="category-btn" onclick="filterCategory('dessert')">Tatlılar</button>
+            <button class="category-btn" onclick="filterCategory('drink')">İçecekler</button>
+        </div>
+
+        <div class="menu-grid" id="menuGrid"></div>
+    </div>
+
+    <div class="cart-float" onclick="showCart()">
+        <svg width="35" height="35" fill="white" viewBox="0 0 24 24">
+            <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
+        </svg>
+        <span class="cart-count" id="cartCount">0</span>
+    </div>
+
+    <div class="modal" id="itemModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+            <canvas class="modal-canvas" id="modalCanvas"></canvas>
+            <h2 id="modalTitle" style="color: #ffa500; font-size: 2.5rem; margin-bottom: 1rem;"></h2>
+            <p id="modalDesc" style="color: #ccc; font-size: 1.2rem; line-height: 1.8;"></p>
+            <div class="quantity-controls">
+                <button class="qty-btn" onclick="changeQty(-1)">-</button>
+                <span class="qty-display" id="qtyDisplay">1</span>
+                <button class="qty-btn" onclick="changeQty(1)">+</button>
+                <span style="margin-left: auto; font-size: 2rem; font-weight: bold;" id="totalPrice"></span>
+            </div>
+            <button class="order-btn" onclick="addToOrder()">Siparişe Ekle</button>
+        </div>
+    </div>
+
+    <script>
+        // Background Canvas
+        const bgCanvas = document.getElementById('bgCanvas');
+        const bgScene = new THREE.Scene();
+        const bgCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const bgRenderer = new THREE.WebGLRenderer({ canvas: bgCanvas, antialias: true, alpha: true });
+        bgRenderer.setSize(window.innerWidth, window.innerHeight);
+
+        // Ambient particles
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlesCount = 2000;
+        const posArray = new Float32Array(particlesCount * 3);
+
+        for (let i = 0; i < particlesCount * 3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 50;
+        }
+
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        const particlesMaterial = new THREE.PointsMaterial({
+            size: 0.05,
+            color: 0xffa500,
+            transparent: true,
+            opacity: 0.6
+        });
+
+        const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+        bgScene.add(particlesMesh);
+
+        bgCamera.position.z = 10;
+
+        function animateBg() {
+            requestAnimationFrame(animateBg);
+            particlesMesh.rotation.y += 0.001;
+            bgRenderer.render(bgScene, bgCamera);
+        }
+        animateBg();
+
+        // Menu Data
+        const menuItems = [
+            { id: 1, name: 'Caesar Salad', category: 'appetizer', price: 85, desc: 'Taze marul, parmesan peyniri, kruton ve özel Caesar sosu', tags: ['Vejeteryan', 'Hafif'] },
+            { id: 2, name: 'Bruschetta', category: 'appetizer', price: 65, desc: 'Kızarmış ekmek üzerinde domates, fesleğen ve zeytinyağı', tags: ['Vegan', 'İtalyan'] },
+            { id: 3, name: 'Izgara Somon', category: 'main', price: 245, desc: 'Taze somon fileto, sebze garnitür ve limon sosu ile', tags: ['Deniz Ürünü', 'Protein'] },
+            { id: 4, name: 'Bonfile Steak', category: 'main', price: 285, desc: 'Dana bonfile, patates püresi ve mantar sosu', tags: ['Et', 'Premium'] },
+            { id: 5, name: 'Risotto', category: 'main', price: 165, desc: 'Kremalı mantarlı risotto, parmesan ile', tags: ['İtalyan', 'Vejeteryan'] },
+            { id: 6, name: 'Tiramisu', category: 'dessert', price: 95, desc: 'Klasik İtalyan tatlısı, mascarpone ve kahve', tags: ['Tatlı', 'Kahveli'] },
+            { id: 7, name: 'Çikolatalı Lava Kek', category: 'dessert', price: 85, desc: 'Sıcak çikolata akıntılı kek, vanilyalı dondurma', tags: ['Çikolata', 'Sıcak'] },
+            { id: 8, name: 'Limonata', category: 'drink', price: 45, desc: 'Ev yapımı taze sıkılmış limonata', tags: ['Serinletici', 'Doğal'] },
+            { id: 9, name: 'Espresso', category: 'drink', price: 35, desc: 'Özel harmanlanmış İtalyan espresso', tags: ['Kahve', 'Sıcak'] }
+        ];
+
+        let cart = [];
+        let currentItem = null;
+        let quantity = 1;
+
+        // Initialize Menu Canvas
+        function initMenuCanvas(canvasId, color, shapeType) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+            renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+
+            let geometry;
+            switch(shapeType) {
+                case 'sphere':
+                    geometry = new THREE.SphereGeometry(1, 32, 32);
+                    break;
+                case 'torus':
+                    geometry = new THREE.TorusGeometry(1, 0.4, 16, 100);
+                    break;
+                case 'cone':
+                    geometry = new THREE.ConeGeometry(1, 2, 32);
+                    break;
+                default:
+                    geometry = new THREE.DodecahedronGeometry(1, 0);
+            }
+
+            const material = new THREE.MeshStandardMaterial({ 
+                color: color,
+                metalness: 0.6,
+                roughness: 0.4
+            });
+
+            const object = new THREE.Mesh(geometry, material);
+            scene.add(object);
+
+            const light = new THREE.PointLight(0xffffff, 1, 100);
+            light.position.set(5, 5, 5);
+            scene.add(light);
+
+            const ambientLight = new THREE.AmbientLight(0x404040);
+            scene.add(ambientLight);
+
+            camera.position.z = 3;
+
+            function animate() {
+                requestAnimationFrame(animate);
+                object.rotation.x += 0.005;
+                object.rotation.y += 0.01;
+                renderer.render(scene, camera);
+            }
+            animate();
+        }
+
+        // Render Menu
+        function renderMenu(category = 'all') {
+            const grid = document.getElementById('menuGrid');
+            grid.innerHTML = '';
+
+            const filtered = category === 'all' ? menuItems : menuItems.filter(item => item.category === category);
+
+            filtered.forEach((item, index) => {
+                const shapes = ['sphere', 'torus', 'cone', 'dodeca'];
+                const colors = [0xff6b00, 0xffa500, 0xff8800, 0xffaa00];
+                
+                const card = document.createElement('div');
+                card.className = 'menu-item';
+                card.innerHTML = `
+                    <canvas class="item-canvas" id="canvas${item.id}"></canvas>
+                    <div class="item-header">
+                        <h3 class="item-name">${item.name}</h3>
+                        <span class="item-price">₺${item.price}</span>
+                    </div>
+                    <p class="item-desc">${item.desc}</p>
+                    <div class="item-tags">
+                        ${item.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                    </div>
+                    <button class="order-btn" onclick="openModal(${item.id})">Detaylı İncele</button>
+                `;
+                grid.appendChild(card);
+
+                setTimeout(() => {
+                    initMenuCanvas(`canvas${item.id}`, colors[index % colors.length], shapes[index % shapes.length]);
+                }, 50);
+            });
+        }
+
+        // Filter Category
+        function filterCategory(category) {
+            document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            renderMenu(category);
+        }
+
+        // Modal
+        let modalScene, modalCamera, modalRenderer, modalObject;
+
+        function openModal(itemId) {
+            currentItem = menuItems.find(item => item.id === itemId);
+            quantity = 1;
+
+            document.getElementById('modalTitle').textContent = currentItem.name;
+            document.getElementById('modalDesc').textContent = currentItem.desc;
+            document.getElementById('qtyDisplay').textContent = quantity;
+            document.getElementById('totalPrice').textContent = `₺${currentItem.price * quantity}`;
+
+            document.getElementById('itemModal').classList.add('active');
+
+            if (!modalRenderer) {
+                const canvas = document.getElementById('modalCanvas');
+                modalScene = new THREE.Scene();
+                modalCamera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+                modalRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+                modalRenderer.setSize(canvas.clientWidth, canvas.clientHeight);
+
+                const geometry = new THREE.TorusKnotGeometry(1.5, 0.5, 100, 16);
+                const material = new THREE.MeshStandardMaterial({ 
+                    color: 0xffa500,
+                    metalness: 0.8,
+                    roughness: 0.2
+                });
+
+                modalObject = new THREE.Mesh(geometry, material);
+                modalScene.add(modalObject);
+
+                const light = new THREE.PointLight(0xffffff, 1.5, 100);
+                light.position.set(10, 10, 10);
+                modalScene.add(light);
+
+                const ambientLight = new THREE.AmbientLight(0x606060);
+                modalScene.add(ambientLight);
+
+                modalCamera.position.z = 5;
+
+                function animate() {
+                    requestAnimationFrame(animate);
+                    modalObject.rotation.y += 0.01;
+                    modalRenderer.render(modalScene, modalCamera);
+                }
+                animate();
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('itemModal').classList.remove('active');
+        }
+
+        function changeQty(delta) {
+            quantity = Math.max(1, quantity + delta);
+            document.getElementById('qtyDisplay').textContent = quantity;
+            document.getElementById('totalPrice').textContent = `₺${currentItem.price * quantity}`;
+        }
+
+        function addToOrder() {
+            cart.push({ ...currentItem, quantity });
+            document.getElementById('cartCount').textContent = cart.length;
+            alert(`${quantity}x ${currentItem.name} siparişe eklendi!`);
+            closeModal();
+        }
+
+        function showCart() {
+            if (cart.length === 0) {
+                alert('Sepetiniz boş!');
+                return;
+            }
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const items = cart.map(item => `${item.quantity}x ${item.name} - ₺${item.price * item.quantity}`).join('\n');
+            alert(`Sepetiniz:\n\n${items}\n\nToplam: ₺${total}`);
+        }
+
+        // Window resize
+        window.addEventListener('resize', () => {
+            bgCamera.aspect = window.innerWidth / window.innerHeight;
+            bgCamera.updateProjectionMatrix();
+            bgRenderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Initialize
+        renderMenu();
+    </script>
+</body>
+</html>
